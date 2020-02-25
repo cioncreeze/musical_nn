@@ -38,6 +38,7 @@ def generate_more_music(model, start_input, num_bars=120):
     return output
 
 def write_to_file(bars, ticks_per_beat, filepath="./", filename="reconstructed"):
+    bars = np.floor(bars*129)
     ticks_per_sixteenth = round(ticks_per_beat / 4)
     #print(ticks_per_sixteenth, type(ticks_per_sixteenth))
     mid = mido.MidiFile(ticks_per_beat=ticks_per_beat)
@@ -123,7 +124,7 @@ def generate_training_data(training_track):
         training_data_input.append(training_track[i] + training_track[i+1])
         training_data_target.append(training_track[i+2])
     
-    training_data_input = np.array(training_data_input)
-    training_data_target = np.array(training_data_target)
+    training_data_input = np.array(training_data_input)/129
+    training_data_target = np.array(training_data_target)/129
 
     return training_data_input, training_data_target
