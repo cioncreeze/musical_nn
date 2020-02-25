@@ -48,7 +48,7 @@ def write_to_file(bars, ticks_per_beat, filepath="./", filename="reconstructed")
     # make sure all notes are integers (not floats)
     bars = [[int(x) for x in lst] for lst in bars]
     # write integer representation to txt file as well
-    f = open(filepath + filename + ".txt", "w")
+    f = open(filepath + filename + ".txt", "a")
     f.write("")
     f.close()
     f = open(filepath + filename + ".txt", "a")
@@ -78,9 +78,9 @@ def write_to_file(bars, ticks_per_beat, filepath="./", filename="reconstructed")
     mid.save(filepath + filename + ".mid")
 
 def log_evaluation(loss, accurracy, modelnumber):
-    f = open("./log.txt")
-    f.write("Params for model ", modelnumber,": \n")
-    f.write("Loss: ", loss, " - Accuracy: ", accurracy)
+    f = open("./log.txt", 'a')
+    f.write("Params for model " + modelnumber + ": \n")
+    f.write("Loss: " + str(loss) + " - Accuracy: " + str(accurracy))
 
 def extract_bars(input_midi, label=None):
     mid = mido.MidiFile(input_midi)

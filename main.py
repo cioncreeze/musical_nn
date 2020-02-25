@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import my_helpers as mh
 
 
-print("tensorflow version: ", tf.__version__)
+#print("tensorflow version: ", tf.__version__)
 
 # MIDI_sample.mid
 
