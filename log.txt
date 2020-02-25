@@ -1,0 +1,25 @@
+Params for model 1: 
+Loss: 5877.497316576087 - Accuracy: 0.0Params for model 5: 
+Loss: 5607.37482591712 - Accuracy: 0.0Params for model 10: 
+Loss: 5596.955010190218 - Accuracy: 0.0Params for model 20: 
+Loss: 5588.662775985054 - Accuracy: 0.0Params for model 1: 
+Loss: 664.5390890858656 - Accuracy: 0.016871165Params for model 5: 
+Loss: 578.812809669167 - Accuracy: 0.01303681Params for model 10: 
+Loss: 568.9572622849166 - Accuracy: 0.1380368Params for model 20: 
+Loss: 568.0832766667465 - Accuracy: 0.2684049Params for model 1: 
+Loss: 0.35192285871213197 - Accuracy: 0.05291411Params for model 5: 
+Loss: 0.2884885041625953 - Accuracy: 0.1993865Params for model 10: 
+Loss: 0.28804107037789983 - Accuracy: 0.014570552Params for model 20: 
+Loss: 0.2880679683451272 - Accuracy: 0.03911043Params for model 1: 
+Loss: 0.34694538398023034 - Accuracy: 0.48006135Params for model 5: 
+Loss: 0.3453869770275303 - Accuracy: 0.21932516Params for model 10: 
+Loss: 0.34540706708387364 - Accuracy: 0.026840491Params for model 20: 
+Loss: 0.34458062418399416 - Accuracy: 0.36579755Params for model 1: 
+Loss: 0.14771187707690372 - Accuracy: 0.018404908Params for model 5: 
+Loss: 0.14042600102585517 - Accuracy: 0.11042945Params for model 10: 
+Loss: 0.14012914621756853 - Accuracy: 0.29064417Params for model 20: 
+Loss: 0.13971541849382085 - Accuracy: 0.043711655Params for model 1: 
+Loss: 0.24697730347422733 - Accuracy: 0.0Params for model 5: 
+Loss: 0.24460784551556125 - Accuracy: 0.0Params for model 10: 
+Loss: 0.24418251353538842 - Accuracy: 0.0Params for model 20: 
+Loss: 0.24412184185776975 - Accuracy: 0.0
