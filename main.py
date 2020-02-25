@@ -53,9 +53,14 @@ for i, track in enumerate(mid.tracks):
 
     trks.append(bars)
 
-training_track = mh.extract_bars('./inputs/inp_1_cMaj_4-4th_temp_1.mid')
-# print(len(bars))
+training_track1 = mh.extract_bars('./inputs/inp_1_cMaj_4-4th_temp_1.mid')
+training_track2 = mh.extract_bars('./inputs/inp_2_cMaj_4-4th_temp_1.mid')
+training_track3 = mh.extract_bars('./inputs/inp_3_cMaj_4-4th_temp_1.mid')
+training_track4 = mh.extract_bars('./inputs/inp_4_cMaj_4-4th_temp_1.mid')
+training_track5 = mh.extract_bars('./inputs/inp_5_cMaj_4-4th_temp_1.mid')
 
+# print(len(bars))
+training_track = training_track1 + training_track2 + training_track3 + training_track4 + training_track5
 training_data_input, training_data_target = mh.generate_training_data(training_track)
 # generate training data
 #training_data_input = []
