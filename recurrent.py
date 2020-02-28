@@ -7,9 +7,10 @@ import functools
 from IPython import display as ipythondisplay
 from tqdm import tqdm 
 import my_helpers as mh
+import mido
 
 #assert len(tf.config.list_physical_devices('GPU')) > 0
-
+mid = mido.MidiFile('./inputs/inp_1_cMaj_4-4th_temp_1.mid')
 song1 = mh.extract_bars('./inputs/inp_1_cMaj_4-4th_temp_1.mid')
 song2 = mh.extract_bars('./inputs/inp_2_cMaj_4-4th_temp_1.mid')
 song3 = mh.extract_bars('./inputs/inp_3_cMaj_4-4th_temp_1.mid')
@@ -17,6 +18,8 @@ song4 = mh.extract_bars('./inputs/inp_4_cMaj_4-4th_temp_1.mid')
 song5 = mh.extract_bars('./inputs/inp_5_cMaj_4-4th_temp_1.mid')
 
 songs = np.array(song1 + song2 + song3 + song4 + song5).flatten()
+
+print("songs", songs)
 
 def get_batch(song_list, seq_length, batch_size):
     # get length of inputs and randomly take subset
@@ -28,7 +31,8 @@ def get_batch(song_list, seq_length, batch_size):
     #create batches in proper size to feed to rnn
     x_batch = np.reshape(input_batch, [batch_size, seq_length])
     y_batch = np.reshape(output_batch, [batch_size, seq_length])
-
+    print("seq_len", seq_length, "batch_size", batch_size)
+    print("x_batch", x_batch, "y_batch", y_batch)
     return x_batch, y_batch
 
 x_batch, y_batch = get_batch(songs, 5, 1)
@@ -63,7 +67,7 @@ def compute_loss(labels, logits):
 # training parameters
 
 num_training_iterations = 2000
-batch_size = 4
+batch_size = 32
 seq_length = 100
 learning_rate = 5e-3
 
@@ -74,6 +78,7 @@ rnn_units = 1024
 checkpoint_dir = './rnn_checkpoints'
 checkpoint_prefix = os.path.join(checkpoint_dir, "checkpoint")
 
+#setup model and optimizer
 model = build_model(vocab_size, embedding_dim, rnn_units, batch_size)
 optimizer = tf.keras.optimizers.Adam(learning_rate)
 
@@ -90,7 +95,7 @@ def train_step(x, y):
 history = []
 
 # run the network for a while
-for iter in tqdm(range(num_training_iterations)):
+"""vfor iter in tqdm(range(num_training_iterations)):
     x_batch, y_batch = get_batch(songs, seq_length, batch_size)
     print(x_batch.shape, y_batch.shape)
     loss = train_step(x_batch, y_batch)
@@ -99,14 +104,15 @@ for iter in tqdm(range(num_training_iterations)):
 
     if iter % 100 == 0:     
       model.save_weights(checkpoint_prefix)
-
+"""
 def generate_song(model, start_string, generation_length=1000):
     song_generated = []
     current_string = start_string
+    input_eval = tf.expand_dims(current_string, 0)
     # Here batch size == 1
     model.reset_states()
-    tqdm._instances.clear()
-    for i in tqdm(range(generation_length)):
+    #tqdm._instances.clear()
+    for i in range(generation_length):
       predictions = model(current_string)
       predictions = tf.squeeze(predictions, 0)
       #dont think I need this
@@ -116,3 +122,13 @@ def generate_song(model, start_string, generation_length=1000):
       song_generated.append(predictions)
 
     return (start_string + ''.join(song_generated))
+
+model = build_model(vocab_size, embedding_dim, rnn_units, batch_size=1)
+
+# Restore the model weights for the last checkpoint after training
+model.load_weights(tf.train.latest_checkpoint(checkpoint_dir))
+model.build(tf.TensorShape([1, None]))
+
+generated_song = generate_song(model, start_string=np.array([64]), generation_length=100)
+
+mh.write_to_file(generate_song, mid.ticks_per_beat, filepath="./", filename="rnn_recon.mid")

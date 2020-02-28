@@ -37,8 +37,9 @@ def generate_more_music(model, start_input, num_bars=120):
 
     return output
 
-def write_to_file(bars, ticks_per_beat, filepath="./", filename="reconstructed"):
-    bars = np.floor(bars*129)
+def write_to_file(bars, ticks_per_beat, filepath="./", filename="reconstructed", stretch=True):
+    if stretch:
+        bars = np.floor(bars*129)
     ticks_per_sixteenth = round(ticks_per_beat / 4)
     #print(ticks_per_sixteenth, type(ticks_per_sixteenth))
     mid = mido.MidiFile(ticks_per_beat=ticks_per_beat)
