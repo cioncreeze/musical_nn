@@ -4,18 +4,63 @@ import numpy as np
 import mido
 
 
-def make_model():
-    model = tf.keras.models.Sequential([
+def make_model(layers, neurons):
+    '''
+    Returns a NN with 1 to 4 hidden layers. with the number of neurons specified for each layer
+    '''
+    if layers == 1:
+        model = tf.keras.models.Sequential([
         tf.keras.layers.Dense(units=32, input_shape=(32, )),
-        tf.keras.layers.Dense(128, activation=tf.nn.relu),  # regular layer (often Dense is used)
-        tf.keras.layers.Dense(128, activation=tf.nn.relu),
+        tf.keras.layers.Dense(neurons, activation=tf.nn.relu),  # regular layer (often Dense is used)
         tf.keras.layers.Dense(16, activation=tf.nn.relu)
-    ])
-    model.compile(optimizer='adam',
+        ])
+        model.compile(optimizer='adam',
                 loss='mean_squared_error',
                 metrics=['accuracy'])
     
-    return model
+        return model
+    if layers == 2:
+        model = tf.keras.models.Sequential([
+        tf.keras.layers.Dense(units=32, input_shape=(32, )),
+        tf.keras.layers.Dense(neurons, activation=tf.nn.relu),  # regular layer (often Dense is used)
+        tf.keras.layers.Dense(neurons, activation=tf.nn.relu),
+        tf.keras.layers.Dense(16, activation=tf.nn.relu)
+        ])
+        model.compile(optimizer='adam',
+                loss='mean_squared_error',
+                metrics=['accuracy'])
+    
+        return model
+    if layers == 3:
+        model = tf.keras.models.Sequential([
+        tf.keras.layers.Dense(units=32, input_shape=(32, )),
+        tf.keras.layers.Dense(neurons, activation=tf.nn.relu),  # regular layer (often Dense is used)
+        tf.keras.layers.Dense(neurons, activation=tf.nn.relu),
+        tf.keras.layers.Dense(neurons, activation=tf.nn.relu),
+        tf.keras.layers.Dense(16, activation=tf.nn.relu)
+        ])
+        model.compile(optimizer='adam',
+                loss='mean_squared_error',
+                metrics=['accuracy'])
+    
+        return model
+    if layers == 4:
+        model = tf.keras.models.Sequential([
+        tf.keras.layers.Dense(units=32, input_shape=(32, )),
+        tf.keras.layers.Dense(neurons, activation=tf.nn.relu),  # regular layer (often Dense is used)
+        tf.keras.layers.Dense(neurons, activation=tf.nn.relu),
+        tf.keras.layers.Dense(neurons, activation=tf.nn.relu),
+        tf.keras.layers.Dense(neurons, activation=tf.nn.relu),
+        tf.keras.layers.Dense(16, activation=tf.nn.relu)
+        ])
+        model.compile(optimizer='adam',
+                loss='mean_squared_error',
+                metrics=['accuracy'])
+    
+        return model
+    else:
+        print("no such network providable")
+
 
 def generate_more_music(model, start_input, num_bars=120):
     start_input = start_input.reshape(32, 1).T # this is necessary in order to avoid tensorflow rejecting the input
@@ -39,7 +84,7 @@ def generate_more_music(model, start_input, num_bars=120):
 
 def write_to_file(bars, ticks_per_beat, filepath="./", filename="reconstructed", stretch=True):
     if stretch:
-        bars = np.floor(bars*129)
+        bars = np.floor(bars*129).astype(int)
     ticks_per_sixteenth = round(ticks_per_beat / 4)
     #print(ticks_per_sixteenth, type(ticks_per_sixteenth))
     mid = mido.MidiFile(ticks_per_beat=ticks_per_beat)
@@ -51,7 +96,7 @@ def write_to_file(bars, ticks_per_beat, filepath="./", filename="reconstructed",
     bars = [[int(x) for x in lst] for lst in bars]
     # write integer representation to txt file as well
     f = open(filepath + filename + ".txt", "a")
-    f.write("")
+    f.write("##########################################################################################################")
     f.close()
     f = open(filepath + filename + ".txt", "a")
     for bar in bars:
@@ -72,11 +117,13 @@ def write_to_file(bars, ticks_per_beat, filepath="./", filename="reconstructed",
                 track.append(mido.Message('note_on', note=note, velocity=100, time=note_hold_time))
                 track.append(mido.Message('note_off', note=note, velocity=0, time=0))
                 note = nt
+                print("wrote note, now setting hold back to 1")
                 hold = 1
             else:
                 if nt < 0 or nt > 129:
-                    print("note is outside of range (0-127), something is not right.")
+                    print("note is outside of range (0-127), something is not right.", nt)
                 hold = hold + 1
+                #print("hodl! ", hold)
     mid.save(filepath + filename + ".mid")
 
 def log_evaluation(loss, accurracy, modelnumber):
@@ -125,7 +172,8 @@ def generate_training_data(training_track):
         training_data_input.append(training_track[i] + training_track[i+1])
         training_data_target.append(training_track[i+2])
     
-    training_data_input = np.array(training_data_input)/129
-    training_data_target = np.array(training_data_target)/129
+    training_data_input = np.around(np.array(training_data_input)/129, 2)
+    training_data_target = np.around(np.array(training_data_target)/129, 2)
+    print(training_data_input, training_data_target)
 
     return training_data_input, training_data_target

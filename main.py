@@ -79,9 +79,12 @@ training_data_input, training_data_target = mh.generate_training_data(training_t
 def make_model():
     model = tf.keras.models.Sequential([
         tf.keras.layers.Dense(units=32, input_shape=(32, )),
-        tf.keras.layers.Dense(128, activation=tf.nn.relu),  # regular layer (often Dense is used)
-        tf.keras.layers.Dense(128, activation=tf.nn.relu),
-        tf.keras.layers.Dense(16, activation=tf.nn.relu)
+        tf.keras.layers.Dense(512, activation=tf.nn.leakyrelu),  # regular layer (often Dense is used)
+        tf.keras.layers.Dense(512, activation=tf.nn.leakyrelu),
+        tf.keras.layers.Dense(512, activation=tf.nn.leakyrelu),
+        tf.keras.layers.Dense(512, activation=tf.nn.leakyrelu),
+        tf.keras.layers.Dense(512, activation=tf.nn.leakyrelu),
+        tf.keras.layers.Dense(16)
     ])
     model.compile(optimizer='adam',
                 loss='mean_squared_error',
@@ -130,40 +133,54 @@ def write_to_file(bars,ticks_per_beat, ticks_per_sixteenth, filepath="./", filen
                 hold = hold + 1
     mid.save(filepath + filename)
 
-# make the model
-model = mh.make_model()
 
-# train for one epoch
-model.fit(training_data_input, training_data_target, epochs=1)
-model.save('./one_epoch_results/one_epoch.h5')
-out_bars = generate_more_music(model, training_data_input[-1], 64)
-mh.write_to_file(out_bars, mid.ticks_per_beat, filepath="./one_epoch_results/", filename="out_1")
-loss, acc = model.evaluate(training_data_input,  training_data_target, verbose=2)
-mh.log_evaluation(loss, acc, "1")
+# grid search:
+num_layers = [1, 2, 3, 4]
+num_neurons = [128, 256, 512, 1024]
+random_seeds = [13251345, 43481342895, 238483428, 485186182341906, 6934563]
 
-# train for 4 more (5 total)
-model.fit(training_data_input, training_data_target, epochs=4)
-model.save('./five_epoch_results/five_epochs.h5')
-out_bars = generate_more_music(model, training_data_input[-1], 64)
-mh.write_to_file(out_bars, mid.ticks_per_beat, filepath="./five_epoch_results/", filename="out_5")
-loss, acc = model.evaluate(training_data_input,  training_data_target, verbose=2)
-mh.log_evaluation(loss, acc, "5")
+for s in random_seeds:
+    tf.random.set_seed(s)
+    for l in num_layers:
+        for n in num_neurons:
+            # make the model
+            model = mh.make_model(l, n)
 
-# train for 5 more (10 total)
-model.fit(training_data_input, training_data_target, epochs=5)
-model.save('./ten_epoch_results/ten_epochs.h5')
-out_bars = generate_more_music(model, training_data_input[-1], 64)
-mh.write_to_file(out_bars, mid.ticks_per_beat, filepath="./ten_epoch_results/", filename="out_10")
-loss, acc = model.evaluate(training_data_input,  training_data_target, verbose=2)
-mh.log_evaluation(loss, acc, "10")
+    # make the model
+    #model = mh.make_model()
 
-# train for 10 more (20 total)
-model.fit(training_data_input, training_data_target, epochs=10)
-model.save('./twenty_epoch_results/twenty_epochs.h5')
-out_bars = generate_more_music(model, training_data_input[-1], 64)
-mh.write_to_file(out_bars, mid.ticks_per_beat, filepath="./twenty_epoch_results/", filename="out_20")
-loss, acc = model.evaluate(training_data_input,  training_data_target, verbose=2)
-mh.log_evaluation(loss, acc, "20")
+    # train for one epoch
+            save = '_' +str(s) + '_' + str(l) + '_' + str(n)
+            model.fit(training_data_input, training_data_target, epochs=1)
+            model.save('./one_epoch_results/one_epoch'+ save + '.h5')
+            out_bars = generate_more_music(model, training_data_input[-1], 64)
+            mh.write_to_file(out_bars, mid.ticks_per_beat, filepath="./one_epoch_results/", filename=save)
+            loss, acc = model.evaluate(training_data_input,  training_data_target, verbose=2)
+            mh.log_evaluation(loss, acc, "1")
+
+            # train for 4 more (5 total)
+            model.fit(training_data_input, training_data_target, epochs=4)
+            model.save('./five_epoch_results/five_epochs' + save + '.h5')
+            out_bars = generate_more_music(model, training_data_input[-1], 64)
+            mh.write_to_file(out_bars, mid.ticks_per_beat, filepath="./five_epoch_results/", filename=save)
+            loss, acc = model.evaluate(training_data_input,  training_data_target, verbose=2)
+            mh.log_evaluation(loss, acc, "5")
+
+            # train for 5 more (10 total)
+            model.fit(training_data_input, training_data_target, epochs=5)
+            model.save('./ten_epoch_results/ten_epochs' + save + '.h5')
+            out_bars = generate_more_music(model, training_data_input[-1], 64)
+            mh.write_to_file(out_bars, mid.ticks_per_beat, filepath="./ten_epoch_results/", filename=save)
+            loss, acc = model.evaluate(training_data_input,  training_data_target, verbose=2)
+            mh.log_evaluation(loss, acc, "10")
+
+            # train for 10 more (20 total)
+            model.fit(training_data_input, training_data_target, epochs=10)
+            model.save('./twenty_epoch_results/twenty_epochs' + save + '.h5')
+            out_bars = generate_more_music(model, training_data_input[-1], 64)
+            mh.write_to_file(out_bars, mid.ticks_per_beat, filepath="./twenty_epoch_results/", filename=save)
+            loss, acc = model.evaluate(training_data_input,  training_data_target, verbose=2)
+            mh.log_evaluation(loss, acc, "20")
 
 
 #print(len(training_data_input), np.shape(training_data_input))

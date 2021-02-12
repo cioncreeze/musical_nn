@@ -9,6 +9,7 @@ from tqdm import tqdm
 import my_helpers as mh
 import mido
 
+print("grüßle")
 #assert len(tf.config.list_physical_devices('GPU')) > 0
 mid = mido.MidiFile('./inputs/inp_1_cMaj_4-4th_temp_1.mid')
 song1 = mh.extract_bars('./inputs/inp_1_cMaj_4-4th_temp_1.mid')
@@ -18,6 +19,12 @@ song4 = mh.extract_bars('./inputs/inp_4_cMaj_4-4th_temp_1.mid')
 song5 = mh.extract_bars('./inputs/inp_5_cMaj_4-4th_temp_1.mid')
 
 songs = np.array(song1 + song2 + song3 + song4 + song5).flatten()
+
+bach_oboe = np.array(mh.extract_bars('./inputs/bwv001_3_oboe-di-caccia.mid')).flatten()
+bach_violoncello = np.array(mh.extract_bars('./inputs/bwv003_3_violoncello.mid')).flatten()
+megalovania = np.array(mh.extract_bars('./inputs/megalovania_only_bass_melody.mid')).flatten()
+meg = mido.MidiFile('./inputs/megalovania_only_bass_melody.mid')
+super_mario = np.array(mh.extract_bars('./inputs/Super_Mario_64_Medley.mid')).flatten()
 
 #print("songs", songs)
 
@@ -35,7 +42,9 @@ def get_batch(song_list, seq_length, batch_size):
     #print("x_batch", x_batch, "y_batch", y_batch)
     return x_batch, y_batch
 
-x_batch, y_batch = get_batch(songs, 5, 1)
+#x_batch, y_batch = get_batch(songs, 5, 1)
+x_batch, y_batch = get_batch(megalovania, 5, 1)
+
 
 # standard lstm stolen from the internet
 def LSTM(rnn_units): 
@@ -66,7 +75,7 @@ def compute_loss(labels, logits):
 
 # training parameters
 
-num_training_iterations = 2000
+num_training_iterations = 200 #2000
 batch_size = 32
 seq_length = 100
 learning_rate = 5e-3
@@ -96,7 +105,8 @@ history = []
 
 # run the network for a while
 for iter in tqdm(range(num_training_iterations)):
-    x_batch, y_batch = get_batch(songs, seq_length, batch_size)
+    #x_batch, y_batch = get_batch(songs, seq_length, batch_size)
+    x_batch, y_batch = get_batch(megalovania, seq_length, batch_size)
     #print(x_batch.shape, y_batch.shape)
     loss = train_step(x_batch, y_batch)
 
@@ -134,4 +144,4 @@ model.summary()
 generated_song = generate_song(model, start_string=[64], generation_length=159)
 #print("gen_sng", generated_song, generated_song.shape)
 generated_song = generated_song.reshape((16, -1))
-mh.write_to_file(generated_song.tolist(), mid.ticks_per_beat, filepath="./", filename="rnn_recon", stretch=False)
+mh.write_to_file(generated_song.tolist(), meg.ticks_per_beat, filepath="./", filename="rnn_recon", stretch=False)
