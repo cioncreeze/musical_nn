@@ -117,7 +117,7 @@ def write_to_file(bars, ticks_per_beat, filepath="./", filename="reconstructed",
                 track.append(mido.Message('note_on', note=note, velocity=100, time=note_hold_time))
                 track.append(mido.Message('note_off', note=note, velocity=0, time=0))
                 note = nt
-                print("wrote note, now setting hold back to 1")
+                #print("wrote note, now setting hold back to 1")
                 hold = 1
             else:
                 if nt < 0 or nt > 129:
@@ -177,3 +177,6 @@ def generate_training_data(training_track):
     print(training_data_input, training_data_target)
 
     return training_data_input, training_data_target
+
+def get_tpb(file_name):
+    return mido.MidiFile(file_name).ticks_per_beat

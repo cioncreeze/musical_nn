@@ -9,7 +9,6 @@ from tqdm import tqdm
 import my_helpers as mh
 import mido
 
-print("grüßle")
 #assert len(tf.config.list_physical_devices('GPU')) > 0
 mid = mido.MidiFile('./inputs/inp_1_cMaj_4-4th_temp_1.mid')
 song1 = mh.extract_bars('./inputs/inp_1_cMaj_4-4th_temp_1.mid')
@@ -19,12 +18,19 @@ song4 = mh.extract_bars('./inputs/inp_4_cMaj_4-4th_temp_1.mid')
 song5 = mh.extract_bars('./inputs/inp_5_cMaj_4-4th_temp_1.mid')
 
 songs = np.array(song1 + song2 + song3 + song4 + song5).flatten()
+songs_tpb = mh.get_tpb('./inputs/inp_1_cMaj_4-4th_temp_1.mid')
 
 bach_oboe = np.array(mh.extract_bars('./inputs/bwv001_3_oboe-di-caccia.mid')).flatten()
+bach_oboe_tpb = mh.get_tpb('./inputs/bwv001_3_oboe-di-caccia.mid')
 bach_violoncello = np.array(mh.extract_bars('./inputs/bwv003_3_violoncello.mid')).flatten()
+bach_violoncello_tpb = mh.get_tpb('./inputs/bwv003_3_violoncello.mid')
 megalovania = np.array(mh.extract_bars('./inputs/megalovania_only_bass_melody.mid')).flatten()
-meg = mido.MidiFile('./inputs/megalovania_only_bass_melody.mid')
+megalovania_tpb = mh.get_tpb('./inputs/megalovania_only_bass_melody.mid')
 super_mario = np.array(mh.extract_bars('./inputs/Super_Mario_64_Medley.mid')).flatten()
+super_mario_tpb = mh.get_tpb('./inputs/Super_Mario_64_Medley.mid')
+
+
+
 
 #print("songs", songs)
 
@@ -43,7 +49,7 @@ def get_batch(song_list, seq_length, batch_size):
     return x_batch, y_batch
 
 #x_batch, y_batch = get_batch(songs, 5, 1)
-x_batch, y_batch = get_batch(megalovania, 5, 1)
+#x_batch, y_batch = get_batch(megalovania, 5, 1)
 
 
 # standard lstm stolen from the internet
@@ -73,24 +79,6 @@ def compute_loss(labels, logits):
     loss = tf.keras.losses.sparse_categorical_crossentropy(labels, logits, from_logits=True)
     return loss
 
-# training parameters
-
-num_training_iterations = 200 #2000
-batch_size = 32
-seq_length = 100
-learning_rate = 5e-3
-
-vocab_size = 130 # number of unique characters in dataset
-embedding_dim = 256
-rnn_units = 1024
-
-checkpoint_dir = './rnn_checkpoints'
-checkpoint_prefix = os.path.join(checkpoint_dir, "checkpoint")
-
-#setup model and optimizer
-model = build_model(vocab_size, embedding_dim, rnn_units, batch_size)
-optimizer = tf.keras.optimizers.Adam(learning_rate)
-
 # custom training step 
 def train_step(x, y): 
     with tf.GradientTape() as tape:
@@ -100,20 +88,6 @@ def train_step(x, y):
     grads = tape.gradient(loss, model.trainable_variables) 
     optimizer.apply_gradients(zip(grads, model.trainable_variables))
     return loss
-
-history = []
-
-# run the network for a while
-for iter in tqdm(range(num_training_iterations)):
-    #x_batch, y_batch = get_batch(songs, seq_length, batch_size)
-    x_batch, y_batch = get_batch(megalovania, seq_length, batch_size)
-    #print(x_batch.shape, y_batch.shape)
-    loss = train_step(x_batch, y_batch)
-
-    history.append(loss.numpy().mean())
-
-    if iter % 100 == 0:     
-      model.save_weights(checkpoint_prefix)
 
 def generate_song(model, start_string, generation_length=100):
     current_string = tf.expand_dims(start_string, 0)
@@ -134,14 +108,57 @@ def generate_song(model, start_string, generation_length=100):
 
     return (np.array(start_string + song_generated).flatten())
 
-model = build_model(vocab_size, embedding_dim, rnn_units, batch_size=1)
-# Restore the model weights for the last checkpoint after training
-model.load_weights(tf.train.latest_checkpoint(checkpoint_dir))
-model.build(tf.TensorShape([1, None]))
+# training parameters
 
-model.summary()
+num_training_iterations = 2000
+batch_size = 32
+seq_length = 100
+learning_rate = 5e-3
 
-generated_song = generate_song(model, start_string=[64], generation_length=159)
-#print("gen_sng", generated_song, generated_song.shape)
-generated_song = generated_song.reshape((16, -1))
-mh.write_to_file(generated_song.tolist(), meg.ticks_per_beat, filepath="./", filename="rnn_recon", stretch=False)
+vocab_size = 130 # number of unique characters in dataset
+embedding_dim = 256
+rnn_units = 1024
+
+traing_data = [songs, bach_oboe, bach_violoncello, megalovania, super_mario]
+traing_data_tpb = [songs_tpb, bach_oboe_tpb, bach_violoncello_tpb, megalovania_tpb, super_mario_tpb]
+
+save_names = ["songs", "bach_oboe", "bach_violoncello", "megalovania", "super_mario"]
+
+checkpoint_dir = './rnn_checkpoints'
+
+for i in range(5):
+    checkpoint_prefix = os.path.join(checkpoint_dir, save_names[i])
+
+    #setup model and optimizer
+    model = build_model(vocab_size, embedding_dim, rnn_units, batch_size)
+    optimizer = tf.keras.optimizers.Adam(learning_rate)
+
+
+
+    history = []
+
+    # run the network for a while
+    for iter in tqdm(range(num_training_iterations)):
+        #x_batch, y_batch = get_batch(songs, seq_length, batch_size)
+        x_batch, y_batch = get_batch(traing_data[i], seq_length, batch_size)
+        #print(x_batch.shape, y_batch.shape)
+        loss = train_step(x_batch, y_batch)
+
+        history.append(loss.numpy().mean())
+
+        if iter % 100 == 0:     
+          model.save_weights(checkpoint_prefix)
+
+
+
+    model = build_model(vocab_size, embedding_dim, rnn_units, batch_size=1)
+    # Restore the model weights for the last checkpoint after training
+    model.load_weights(tf.train.latest_checkpoint(checkpoint_dir))
+    model.build(tf.TensorShape([1, None]))
+
+    model.summary()
+
+    generated_song = generate_song(model, start_string=[64], generation_length=159)
+    #print("gen_sng", generated_song, generated_song.shape)
+    generated_song = generated_song.reshape((16, -1))
+    mh.write_to_file(generated_song.tolist(), traing_data_tpb[i], filepath="./rnn_results/", filename=save_names[i], stretch=False)
